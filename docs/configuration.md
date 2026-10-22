@@ -83,7 +83,7 @@ WardenConfig(secret_key="...", login_identifier_fields=["username", "email"])
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `allow_registration` | `bool` | `True` | Currently informational — gate registration yourself at the route level if you need to disable it (e.g. invite-only apps). |
+| `allow_registration` | `bool` | `True` | Not enforced. To disable registration, leave the endpoint out with `warden.build_router(exclude={"register"})`. |
 
 ## Email Backend
 
