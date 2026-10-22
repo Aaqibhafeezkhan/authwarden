@@ -7,6 +7,11 @@ and this project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-22
+### Fixed
+- Default email backend was never passed to `NotificationService`. Without an explicit `email_backend=`, all emails (verification, password reset, notifications) were silently dropped, and `email_backend="smtp"` in config had no effect. The backend selected by config is now used.
+- Docs: the lockout setting is `max_failed_attempts`, not `max_login_attempts`, and `AccountLocked` returns `403`, not `423`.
+
 ## [1.0.0] - 2026-06
 First stable release.
 
@@ -101,7 +106,8 @@ milestones rather than published package versions. Tagged on GitHub as
 - Exception hierarchy, Pydantic v2 models, `WardenConfig`,
   `AbstractUserStore` protocol, in-memory reference implementation.
 
-[Unreleased]: https://github.com/timihack/authwarden/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/timihack/authwarden/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/timihack/authwarden/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/timihack/authwarden/compare/v0.7.1...v1.0.0
 [0.7.1]: https://github.com/timihack/authwarden/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/timihack/authwarden/releases/tag/v0.7.0

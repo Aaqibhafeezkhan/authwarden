@@ -135,7 +135,7 @@ class AuthWarden:
     resolved_email_backend = email_backend or _build_email_backend(config)
     self.notification_service = notification_service or NotificationService(
       config=config,
-      email_backend=email_backend,
+      email_backend=resolved_email_backend,
       sms_backend=sms_backend,
       email_templates=email_templates,
       sms_templates=sms_templates,
@@ -204,4 +204,3 @@ class AuthWarden:
       Usage: ``Depends(warden.require_scopes("write"))``
       """
       return self._require_scopes_factory(*scopes, require_all=require_all)
-
