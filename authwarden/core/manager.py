@@ -149,25 +149,47 @@ class AuthWarden:
     self._require_roles_factory = build_require_roles(self.jwt_handler)
     self._require_scopes_factory = build_require_scopes(self.jwt_handler)
 
-    self._router = self._build_router()
+    self._router = self.build_router()
 
-  def _build_router(self) -> APIRouter:
-    """Assemble the combined router from auth, mfa, and oauth sub-routers."""
-    router = APIRouter()
-    router.include_router(build_auth_router(
+  def _build_groups(self) -> dict[str, APIRouter]:
+    return {
+      "auth": build_auth_router(
         store=self.store, config=self.config, password_handler=self.password_handler,
         jwt_handler=self.jwt_handler, notification_service=self.notification_service,
         session_backend=self.session_backend, get_current_user=self._get_current_user,
-    ))
-    router.include_router(build_mfa_router(
+      ),
+      "mfa": build_mfa_router(
         store=self.store, config=self.config, password_handler=self.password_handler,
         notification_service=self.notification_service, get_current_user=self._get_current_user,
-    ))
-    router.include_router(build_oauth_router(
+      ),
+      "oauth": build_oauth_router(
         store=self.store, config=self.config, jwt_handler=self.jwt_handler,
         notification_service=self.notification_service, providers=self.oauth_providers,
         state_store=self.oauth_state_store, get_current_user=self._get_current_user,
-    ))
+      ),
+    }
+
+  def build_router(
+    self, *, include: set[str] | None = None, exclude: set[str] | None = None
+  ) -> APIRouter:
+    """Build a router with all endpoints, or a subset chosen by group or endpoint name."""
+    if include is not None and exclude is not None:
+      raise ValueError("Pass either include or exclude, not both")
+
+    groups = self._build_groups()
+    chosen = include if include is not None else exclude or set()
+    known = set(groups) | {r.name for g in groups.values() for r in g.routes}
+    if unknown := chosen - known:
+      raise ValueError(f"Unknown group or endpoint: {sorted(unknown)}")
+
+    def keep(group: str, name: str) -> bool:
+      matched = group in chosen or name in chosen
+      return matched if include is not None else not matched
+
+    router = APIRouter()
+    for group, sub in groups.items():
+      sub.routes[:] = [r for r in sub.routes if keep(group, r.name)]
+      router.include_router(sub)
     return router
 
   @property

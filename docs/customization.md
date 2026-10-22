@@ -2,6 +2,14 @@
 
 A quick reference pulling together every extension point covered in detail elsewhere on this site.
 
+## Which endpoints are mounted
+
+Mount a subset of the router by group or endpoint name. See [`build_router`](concepts/facade.md).
+
+```python
+app.include_router(warden.build_router(exclude={"oauth", "mfa"}), prefix="/auth")
+```
+
 ## Database
 
 Implement [`AbstractUserStore`](concepts/user-store.md) — full examples for SQLAlchemy, MongoDB/Beanie, SQLModel, and Tortoise.
