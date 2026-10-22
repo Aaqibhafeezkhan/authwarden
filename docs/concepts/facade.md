@@ -56,6 +56,27 @@ A `fastapi.APIRouter` combining all 20 endpoints (auth, MFA, OAuth). Mount it li
 app.include_router(warden.router, prefix="/auth", tags=["auth"])
 ```
 
+### `warden.build_router(include=None, exclude=None)`
+
+Mount only the endpoints you need. Pass a set of group names, endpoint names, or both. Unmounted endpoints return `404`.
+
+```python
+app.include_router(warden.build_router(include={"auth"}), prefix="/auth")
+app.include_router(warden.build_router(include={"register", "login", "refresh", "logout"}), prefix="/auth")
+app.include_router(warden.build_router(exclude={"oauth", "mfa"}), prefix="/auth")
+app.include_router(warden.build_router(exclude={"register"}), prefix="/auth")
+```
+
+Pass `include` or `exclude`, not both. An unknown name raises `ValueError`. `warden.router` is the same as `build_router()` with everything mounted.
+
+| Group | Endpoint names |
+|---|---|
+| `auth` | `register`, `verify_email`, `verify_otp`, `resend_verification`, `login`, `logout`, `refresh`, `forgot_password`, `reset_password`, `reset_password_otp`, `change_password`, `set_password` |
+| `mfa` | `setup`, `confirm`, `disable` |
+| `oauth` | `list_accounts`, `authorize`, `callback`, `connect`, `disconnect` |
+
+Some endpoints depend on others, for example `refresh` needs `login`. You choose the combination.
+
 ### `warden.current_user`
 
 A `Depends()`-compatible dependency resolving the authenticated user. Two things happen on every call: the JWT is decoded and verified (checked against the token blacklist), then the user is fetched fresh from your store and checked for `is_active`.
