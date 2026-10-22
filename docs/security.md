@@ -24,7 +24,7 @@ Password reset tokens (link mode) track `reset_token_used_at` — a second attem
 
 ## Brute force protection
 
-Login lockout (`max_login_attempts`/`login_lockout_duration`) and OTP attempt limiting (`max_otp_attempts`) are both on by default, not opt-in. OTP invalidation on hitting the limit happens **within the same request that crosses the threshold** — not on the next call after — closing a timing gap that's easy to get wrong.
+Login lockout (`max_failed_attempts`/`login_lockout_duration`) and OTP attempt limiting (`max_otp_attempts`) are both on by default, not opt-in. OTP invalidation on hitting the limit happens **within the same request that crosses the threshold** — not on the next call after — closing a timing gap that's easy to get wrong.
 
 ## OAuth state — CSRF protection
 

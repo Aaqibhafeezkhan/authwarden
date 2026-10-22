@@ -42,7 +42,7 @@ All policy violations are reported together in a single error, not one-at-a-time
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `max_login_attempts` | `int` | `5` | Failed logins before lockout. Set to `0` to disable lockout entirely. |
+| `max_failed_attempts` | `int` | `5` | Failed logins before lockout. Set to `0` to disable lockout entirely. |
 | `login_lockout_duration` | `int` | `900` (15 min) | How long an account stays locked after hitting the limit, in seconds. |
 | `max_otp_attempts` | `int` | `5` | Wrong OTP guesses before the OTP is invalidated and a new one must be requested. Set to `0` to disable. |
 

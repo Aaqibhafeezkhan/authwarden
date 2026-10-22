@@ -38,7 +38,7 @@ With the above, `"identifier": "johndoe"` is tried as a username first; if no us
 
 ## Brute force protection
 
-Every failed attempt increments `failed_login_attempts` on the account. After `max_login_attempts` consecutive failures, the account locks for `login_lockout_duration` seconds (`AccountLocked`, status `423`). The counter resets to zero on the next successful login. Set `max_login_attempts=0` to disable lockout entirely.
+Every failed attempt increments `failed_login_attempts` on the account. After `max_failed_attempts` consecutive failures, the account locks for `login_lockout_duration` seconds (`AccountLocked`, status `403`). The counter resets to zero on the next successful login. Set `max_failed_attempts=0` to disable lockout entirely.
 
 A login attempt against an unknown identifier still runs a dummy password verification before returning `InvalidCredentials` — this normalizes response timing so an attacker can't distinguish "wrong password" from "no such account" by response latency.
 
@@ -47,7 +47,7 @@ A login attempt against an unknown identifier still runs a dummy password verifi
 | Status | Exception | When |
 |---|---|---|
 | 401 | `InvalidCredentials` | Unknown identifier, or wrong password. |
-| 423 | `AccountLocked` | Too many recent failed attempts. |
+| 403 | `AccountLocked` | Too many recent failed attempts. |
 | 403 | `AccountInactive` | Account deactivated. |
 | 403 | `EmailNotVerified` | `require_email_verification=True` and the account isn't verified yet. |
 | 403 | `MFARequired` | MFA is enabled on the account but no `totp_code` was supplied. |
