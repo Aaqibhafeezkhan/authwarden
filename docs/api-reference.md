@@ -64,7 +64,7 @@ Every flow raises a typed `AuthError` subclass; the router converts it to the ma
 | `RateLimited` | 429 | | `PasswordAlreadySet` | 400 |
 | `InvalidCredentials` | 401 | | `UserNotFound` | 404 |
 | `AccountInactive` | 403 | | `ForbiddenError` | 403 |
-| `AccountLocked` | 423 | | `MFANotEnabled` | 400 |
+| `AccountLocked` | 403 | | `MFANotEnabled` | 400 |
 | `EmailNotVerified` | 403 | | `MFAAlreadyEnabled` | 409 |
 | `InvalidMFACode` | 401 | | `InvalidBackupCode` | 401 |
 | `MFARequired` | 403 | | `OAuthProviderNotConfigured` | 404 |
