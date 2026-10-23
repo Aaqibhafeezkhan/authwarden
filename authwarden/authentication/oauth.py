@@ -123,7 +123,7 @@ class GoogleOAuthProvider(OAuthProviderBase):
   """Gogle OIDC provider - id_token + userinfo endpoint."""
   name             = "google"
   authorize_url    = "https://accounts.google.com/o/oauth2/v2/auth"
-  access_token_url = "https://oauth2.googleapis.com/token" # nosec B105
+  access_token_url = "https://oauth2.googleapis.com/token"
   userinfo_url     = "https://openidconnect.googleapis.com/v1/userinfo"
   default_scopes   = ["openid", "email", "profile"]
 
@@ -152,7 +152,7 @@ class FacebookOAuthProvider(OAuthProviderBase):
   """Fasebook OAuth2 provider - /me endpoint field selection"""
   name = "facebook"
   authorize_url = "https://www.facebook.com/v19.0/dialog/oauth"
-  access_token_url = "https://graph.facebook.com/v19.0/oauth/access_token" # nosec B105
+  access_token_url = "https://graph.facebook.com/v19.0/oauth/access_token"
   userinfo_url = "https://graph.facebook.com/me"
   default_scopes = ["email", "public_profile"]
 
@@ -172,7 +172,7 @@ class FacebookOAuthProvider(OAuthProviderBase):
         provider=self.name,
         provider_user_id=data["id"],
         email=data.get("email"),
-        email_verified=bool(data.get("email")),
+        email_verified=False,
         full_name=data.get("name"),
         first_name=data.get("first_name"),
         last_name=data.get("last_name"),
@@ -186,7 +186,7 @@ class GitHubOAuthProvider(OAuthProviderBase):
 
   name = "github"
   authorize_url = "https://github.com/login/oauth/authorize"
-  access_token_url = "https://github.com/login/oauth/access_token" # nosec B105
+  access_token_url = "https://github.com/login/oauth/access_token"
   userinfo_url = "https://api.github.com/user"
   default_scopes = ["read:user", "user:email"]
 
@@ -207,7 +207,7 @@ class GitHubOAuthProvider(OAuthProviderBase):
           )
           if email_resp.status_code == 200:
               emails = email_resp.json()
-              primary = next((e for e in emails if e.get("primary")), None)
+              primary = next((e for e in emails if e.get("primary") and e.get("verified")), None)
               if primary:
                   email = primary["email"]
 
@@ -226,7 +226,7 @@ class MicrosoftOAuthProvider(OAuthProviderBase):
 
   name = "microsoft"
   authorize_url = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
-  access_token_url = "https://login.microsoftonline.com/common/oauth2/v2.0/token" # nosec B105
+  access_token_url = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
   userinfo_url = "https://graph.microsoft.com/oidc/userinfo"
   default_scopes = ["openid", "email", "profile"]
 
@@ -242,7 +242,7 @@ class MicrosoftOAuthProvider(OAuthProviderBase):
         provider=self.name,
         provider_user_id=data["sub"],
         email=data.get("email"),
-        email_verified=bool(data.get("email")),
+        email_verified=False,
         full_name=data.get("name"),
         avatar_url=None,
         raw=data,
@@ -254,7 +254,7 @@ class LinkedInOAuthProvider(OAuthProviderBase):
 
   name = "linkedin"
   authorize_url = "https://www.linkedin.com/oauth/v2/authorization"
-  access_token_url = "https://www.linkedin.com/oauth/v2/accessToken" # nosec B105
+  access_token_url = "https://www.linkedin.com/oauth/v2/accessToken"
   userinfo_url = "https://api.linkedin.com/v2/userinfo"
   default_scopes = ["openid", "email", "profile"]
 
@@ -284,7 +284,7 @@ class DiscordOAuthProvider(OAuthProviderBase):
 
   name = "discord"
   authorize_url = "https://discord.com/api/oauth2/authorize"
-  access_token_url = "https://discord.com/api/oauth2/token" # nosec B105
+  access_token_url = "https://discord.com/api/oauth2/token"
   userinfo_url = "https://discord.com/api/users/@me"
   default_scopes = ["identify", "email"]
 
@@ -320,7 +320,7 @@ class TwitterOAuthProvider(OAuthProviderBase):
 
   name = "twitter"
   authorize_url = "https://twitter.com/i/oauth2/authorize"
-  access_token_url = "https://api.twitter.com/2/oauth2/token" # nosec B105
+  access_token_url = "https://api.twitter.com/2/oauth2/token"
   userinfo_url = "https://api.twitter.com/2/users/me"
   default_scopes = ["tweet.read", "users.read", "offline.access"]
 
@@ -362,7 +362,7 @@ class AppleOAuthProvider(OAuthProviderBase):
 
   name = "apple"
   authorize_url = "https://appleid.apple.com/auth/authorize"
-  access_token_url = "https://appleid.apple.com/auth/token" # nosec B105
+  access_token_url = "https://appleid.apple.com/auth/token"
   userinfo_url = None
   default_scopes = ["name", "email"]
   jwks_url = "https://appleid.apple.com/auth/keys"

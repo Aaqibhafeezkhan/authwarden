@@ -30,6 +30,10 @@ Login lockout (`max_failed_attempts`/`login_lockout_duration`) and OTP attempt l
 
 PKCE state is single-use (`get_and_delete` removes it on read) and encodes its own purpose (`login` vs `connect`) and, for `connect`, the specific user it belongs to. A state minted for one purpose or user can't be replayed against another — this is what actually prevents OAuth CSRF, not just the `state` parameter's mere presence.
 
+## OAuth account linking
+
+A social login is linked to an existing local account by email only when the provider reports that email as verified. An unverified provider email can't be used to take over a local account. See [Account Linking](oauth/account-linking.md).
+
 ## OAuth tokens at rest
 
 Access and refresh tokens returned by social providers are encrypted (Fernet) before storage, using a key derived from `secret_key` via SHA-256. They're never returned in any API response — `OAuthAccountRead` only exposes `id`, `provider`, `email`, `created_at`.

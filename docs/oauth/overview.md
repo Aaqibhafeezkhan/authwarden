@@ -5,9 +5,9 @@
 | Provider | Key | Notes |
 |---|---|---|
 | Google | `google` | OIDC, `id_token` + userinfo endpoint |
-| GitHub | `github` | Falls back to `/user/emails` if the primary `/user` response has no public email |
-| Facebook | `facebook` | |
-| Microsoft | `microsoft` | Azure AD / personal accounts via the common endpoint |
+| GitHub | `github` | Falls back to the verified primary address from `/user/emails` if the `/user` response has no public email |
+| Facebook | `facebook` | Email treated as unverified, so it never auto-links by email |
+| Microsoft | `microsoft` | Azure AD / personal accounts via the common endpoint. Email treated as unverified, so it never auto-links by email |
 | LinkedIn | `linkedin` | OIDC-compliant `/userinfo` |
 | Discord | `discord` | Builds the CDN avatar URL from the response |
 | Twitter / X | `twitter` | **No email available** via standard OAuth2 scopes — see [Account Linking](account-linking.md) for how this is handled |
