@@ -21,14 +21,17 @@ The provider's email matches an existing UserInDB.email
 
 What happens here depends on `WardenConfig.auto_link_by_email`:
 
-- **`True`** (default): the provider gets linked to that existing account automatically, **but only if the provider reports the email as verified**. A user who registered with a password can later "Sign in with Google" using the same email and it just works — no extra step. If the provider does not vouch for the email, this behaves like `False`.
+- **`True`** (default): the provider gets linked to that existing account automatically. A user who registered with a password can later "Sign in with Google" using the same email and it just works — no extra step. Auto-link only happens when all of these hold, otherwise it behaves like `False`:
+    - the provider reports the email as verified
+    - the local account's email is verified (`is_verified=True`)
+    - `require_email_verification=True`, because with verification off a local account's email was never proven
 - **`False`**: raises `EmailAlreadyRegistered` (409) instead. The user must log in with their password first, then explicitly call `/auth/oauth/{provider}/connect` to link it. Choose this if you want users to consciously opt into linking rather than have it happen silently.
 
 Which providers report a verified email: Google, LinkedIn, Discord, and Apple do, using the provider's own flag. GitHub counts only a verified primary email. Microsoft and Facebook give no reliable verification flag, so their emails are always treated as unverified and never auto-link. Twitter/X gives no email.
 
 ## Case 3 — No match at all, provider gave an email
 
-A brand-new user. An account is created with `is_active=True, is_verified=True` (OAuth providers already verify email ownership, so there's no separate verification step), `hashed_password=None` (OAuth-only — see [`set-password`](../flows/password-reset.md#set-password-oauth-only-accounts) if they later want to add a password), and a welcome notification is sent.
+A brand-new user. An account is created with `is_active=True` and `is_verified` set from the provider's own flag, so an email the provider did not verify stays unverified (the user can verify it with the normal [verification flow](../flows/verification.md)). It also has `hashed_password=None` (OAuth-only — see [`set-password`](../flows/password-reset.md#set-password-oauth-only-accounts) if they later want to add a password), and a welcome notification is sent.
 
 ## Case 4 — No match, provider gave no email
 

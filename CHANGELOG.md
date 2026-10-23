@@ -7,6 +7,13 @@ and this project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-10-23
+### Security
+- Completes the 1.1.1 account-linking fix. Auto-link by email now also requires the local account's email to be verified and `require_email_verification` to be on, because with verification off a local account's email was never proven.
+- Accounts created from an OAuth login are marked verified only if the provider verified the email. Before, they were always marked verified, which let an account created from an unverified email be linked into later.
+- OAuth login now rejects deactivated accounts (`AccountInactive`, 403). Before, the callback issued tokens without checking `is_active`.
+- Existing accounts keep their stored `is_verified` value. Review accounts created through OAuth before this release if your provider could return unverified emails.
+
 ## [1.1.1] - 2026-10-23
 ### Security
 - OAuth login no longer links to an existing local account by email unless the provider reports that email as verified. Previously the verification flag was ignored, so an unverified provider email matching a local account could sign in to it. Microsoft and Facebook emails are now always treated as unverified, and GitHub's fallback uses only a verified primary email. Users who relied on auto-link with those two providers get `EmailAlreadyRegistered` and must log in with their password and connect the provider. Upgrade is recommended for everyone using OAuth.
@@ -114,7 +121,8 @@ milestones rather than published package versions. Tagged on GitHub as
 - Exception hierarchy, Pydantic v2 models, `WardenConfig`,
   `AbstractUserStore` protocol, in-memory reference implementation.
 
-[Unreleased]: https://github.com/timihack/authwarden/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/timihack/authwarden/compare/v1.1.2...HEAD
+[1.1.2]: https://github.com/timihack/authwarden/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/timihack/authwarden/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/timihack/authwarden/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/timihack/authwarden/compare/v1.0.0...v1.0.1
