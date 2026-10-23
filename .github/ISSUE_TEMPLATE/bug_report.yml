@@ -1,0 +1,36 @@
+name: Bug report
+description: Something does not work as documented
+labels: ["bug"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: authwarden version
+      placeholder: "1.1.0"
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Python and FastAPI versions
+      placeholder: "Python 3.12, FastAPI 0.115"
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal code to reproduce
+      render: Python
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Traceback or logs
+      render: text

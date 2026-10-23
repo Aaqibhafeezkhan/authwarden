@@ -28,6 +28,26 @@ Most FastAPI auth tutorials show you a toy JWT example and stop there. authwarde
 
 ---
 
+## How it compares
+
+authwarden is a complete auth layer: routes, flows, and a storage protocol. [Authlib](https://authlib.org) is a lower-level OAuth/OIDC toolkit, and authwarden uses it internally for the OAuth client. The closest alternative is [fastapi-users](https://github.com/fastapi-users/fastapi-users).
+
+| | authwarden | fastapi-users |
+|---|---|---|
+| Project status | Active | Maintenance mode: security and dependency updates only |
+| Register, login, password reset, email verification | ✅ | ✅ |
+| Social login | 8 providers including Apple, PKCE on all | ✅ |
+| MFA (TOTP + backup codes) | ✅ | Not in its feature list |
+| Role hierarchy and scopes | ✅ | Not in its feature list |
+| Login lockout and OTP attempt limits | ✅ | Not in its feature list |
+| Cookie transport | Not yet | ✅ |
+| Database and Redis token strategies | Not yet | ✅ |
+| Built-in ORM stores | Not yet (planned) | ✅ |
+
+Compared against the fastapi-users README as of October 2026. Check its current docs before deciding.
+
+---
+
 ## Features
 
 **Authentication**
@@ -49,7 +69,7 @@ Most FastAPI auth tutorials show you a toy JWT example and stop there. authwarde
 **OAuth 2.0 / Social Login**
 - Google, GitHub, Facebook, Microsoft, LinkedIn, Discord, Twitter/X, Apple
 - PKCE (S256) on every provider, no exceptions
-- Automatic account linking (existing link → email match → auto-register)
+- Automatic account linking (existing link → verified-email match → auto-register)
 - Apple's quirks handled for you: ES256 client-secret generation, JWKS-cached `id_token` verification, first-login-only name capture
 - OAuth tokens encrypted at rest
 
