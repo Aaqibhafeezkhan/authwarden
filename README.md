@@ -7,7 +7,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/authwarden.svg)](https://pypi.org/project/authwarden/)
 [![Python versions](https://img.shields.io/pypi/pyversions/authwarden.svg)](https://pypi.org/project/authwarden/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/timihack/authwarden/blob/main/LICENSE)
-[![Tests](https://img.shields.io/badge/tests-408%20passing-brightgreen.svg)](https://github.com/timihack/authwarden)
+[![Tests](https://img.shields.io/badge/tests-415%20passing-brightgreen.svg)](https://github.com/timihack/authwarden)
 
 JWT auth, OAuth2 across 8 providers, MFA, RBAC, and full flow flexibility — all behind a clean FastAPI router you can drop into any app.
 

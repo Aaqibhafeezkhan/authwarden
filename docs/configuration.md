@@ -129,7 +129,7 @@ These are credentials only — there's no `sms_backend` selector field. Build th
 | Field | Type | Default | Description |
 |---|---|---|---|
 | `oauth_providers` | `dict[str, OAuthProviderConfig]` | `{}` | Keyed by provider name (`"google"`, `"github"`, etc.). See [OAuth Overview](oauth/overview.md). |
-| `auto_link_by_email` | `bool` | `True` | When a social login's email matches an existing local account, link automatically. When `False`, raises `EmailAlreadyRegistered` instead — the user must log in with their password first, then connect the provider explicitly. |
+| `auto_link_by_email` | `bool` | `True` | When a social login's email matches an existing local account and the provider reports that email as verified, link automatically. When `False`, or when the provider does not verify the email, raises `EmailAlreadyRegistered` instead — the user must log in with their password first, then connect the provider explicitly. |
 | `apple_team_id` | `str \| None` | `None` | Required only for the `"apple"` provider. |
 | `apple_key_id` | `str \| None` | `None` | Required only for the `"apple"` provider. |
 | `apple_private_key_pem` | `str \| None` | `None` | Required only for the `"apple"` provider — the `.p8` private key content. |

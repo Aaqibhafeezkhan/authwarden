@@ -746,8 +746,8 @@ class TestProviderUserinfoMapping:
         )
         respx.get("https://api.github.com/user/emails").mock(
             return_value=httpx.Response(200, json=[
-                {"email": "secondary@example.com", "primary": False},
-                {"email": "primary@example.com", "primary": True},
+                {"email": "secondary@example.com", "primary": False, "verified": True},
+                {"email": "primary@example.com", "primary": True, "verified": True},
             ])
         )
         userinfo = await provider.fetch_userinfo({"access_token": "tok"})
