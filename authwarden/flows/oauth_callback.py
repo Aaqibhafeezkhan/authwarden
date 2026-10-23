@@ -113,7 +113,7 @@ async def oauth_callback_flow(
 
         if user is not None:
             # Case 2 — email matches existing local user
-            if not config.auto_link_by_email:
+            if not (config.auto_link_by_email and userinfo.email_verified):
                 raise EmailAlreadyRegistered()
         else:
             # Case 3/4 — auto-register new user
