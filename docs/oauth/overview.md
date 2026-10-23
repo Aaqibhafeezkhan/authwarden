@@ -126,6 +126,7 @@ Access and refresh tokens returned by the provider are encrypted at rest (Fernet
 | Status | Exception | When |
 |---|---|---|
 | 404 | `OAuthProviderNotConfigured` | Unknown provider, or configured with `enabled=False`. |
+| 403 | `AccountInactive` | The matched or linked account is deactivated. |
 | 400 | `OAuthStateMismatch` | State doesn't exist, expired, or wrong purpose/user — possible CSRF. |
 | 502 | `OAuthCodeExchangeFailed` | The provider rejected the code exchange. |
 | 502 | `OAuthUserInfoFailed` | Fetching user info from the provider failed. |
