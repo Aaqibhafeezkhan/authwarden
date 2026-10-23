@@ -179,7 +179,7 @@ class JWTHandler:
     """
     payload = self._build_payload(
         user_id=user_id,
-        token_type="access",
+        token_type="access", # nosec B106
         roles=roles or [],
         scopes=scopes or [],
         ttl=self._config.access_token_ttl,
@@ -208,7 +208,7 @@ class JWTHandler:
     """
     payload = self._build_payload(
         user_id=user_id,
-        token_type="refresh",
+        token_type="refresh", # nosec B106
         roles=roles or [],
         scopes=scopes or [],
         ttl=self._config.refresh_token_ttl,
