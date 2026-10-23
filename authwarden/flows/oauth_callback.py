@@ -10,7 +10,7 @@ from authwarden.authentication.oauth import OAuthProviderBase, _token_expiry
 from authwarden.authentication.oauth_state import AbstractOAuthStateStore
 from authwarden.core.config import WardenConfig
 from authwarden.exceptions import (
-    EmailAlreadyRegistered, OAuthCodeExchangeFailed, OAuthProviderNotConfigured,
+    AccountInactive, EmailAlreadyRegistered, OAuthCodeExchangeFailed, OAuthProviderNotConfigured,
     OAuthStateMismatch, OAuthUserInfoFailed, UserNotFound,
 )
 from authwarden.models.token import TokenPair
@@ -113,7 +113,13 @@ async def oauth_callback_flow(
 
         if user is not None:
             # Case 2 — email matches existing local user
-            if not (config.auto_link_by_email and userinfo.email_verified):
+            can_link = (
+                config.auto_link_by_email
+                and config.require_email_verification
+                and userinfo.email_verified
+                and user.is_verified
+            )
+            if not can_link:
                 raise EmailAlreadyRegistered()
         else:
             # Case 3/4 — auto-register new user
@@ -124,7 +130,7 @@ async def oauth_callback_flow(
                 full_name=userinfo.full_name,
                 hashed_password=None,
                 is_active=True,
-                is_verified=True,
+                is_verified=userinfo.email_verified,
                 created_at=now, updated_at=now,
             )
             user = await store.create(user)
@@ -142,6 +148,9 @@ async def oauth_callback_flow(
             token_expires_at=expires_at,
         )
         await store.create_oauth_account(account)
+
+    if not user.is_active:
+        raise AccountInactive()
 
     pair = jwt_handler.create_token_pair(user.id, roles=user.roles, scopes=user.scopes)
     return OAuthCallbackResult(token_pair=pair, user=user.to_read(), is_new_user=is_new_user)

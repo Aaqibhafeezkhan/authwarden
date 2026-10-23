@@ -69,7 +69,7 @@ WardenConfig(secret_key="...", login_identifier_fields=["username", "email"])
 | `otp_ttl` | `int` | `600` (10 min) | OTP expiry, in seconds. |
 | `email_verification_ttl` | `int` | `86400` (24h) | Link-mode verification token expiry, in seconds. |
 | `resend_verification_cooldown` | `int` | `60` | Minimum seconds between resend requests. |
-| `require_email_verification` | `bool` | `True` | When `False`, new accounts are immediately active and verified — no verification step at all. |
+| `require_email_verification` | `bool` | `True` | When `False`, new accounts are immediately active and verified — no verification step at all. Because those emails were never proven, social logins are not auto-linked to them. |
 
 ## Password Reset
 

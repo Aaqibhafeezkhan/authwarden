@@ -32,7 +32,7 @@ PKCE state is single-use (`get_and_delete` removes it on read) and encodes its o
 
 ## OAuth account linking
 
-A social login is linked to an existing local account by email only when the provider reports that email as verified. An unverified provider email can't be used to take over a local account. See [Account Linking](oauth/account-linking.md).
+A social login is linked to an existing local account by email only when the provider reports that email as verified, the local account's email is verified, and `require_email_verification` is on. An email nobody proved can't be used to take over an account. Accounts created from an unverified provider email stay unverified, and a deactivated account can't sign in through OAuth. See [Account Linking](oauth/account-linking.md).
 
 ## OAuth tokens at rest
 
