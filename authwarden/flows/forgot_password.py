@@ -44,7 +44,7 @@ async def forgot_password_flow(
     user.last_reset_request_at = utcnow()
     user.updated_at = utcnow()
 
-    if config.password_reset_method == "otp":
+    if config.password_reset_method == "otp": # nosec B105
         otp = generate_otp(config.otp_length)
         user.reset_otp_hash = hash_token(otp)
         user.reset_otp_expires_at = utcnow() + timedelta(seconds=config.otp_ttl)
