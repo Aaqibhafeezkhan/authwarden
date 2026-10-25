@@ -7,7 +7,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/authwarden.svg)](https://pypi.org/project/authwarden/)
 [![Python versions](https://img.shields.io/pypi/pyversions/authwarden.svg)](https://pypi.org/project/authwarden/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/timihack/authwarden/blob/main/LICENSE)
-[![Tests](https://img.shields.io/badge/tests-425%20passing-brightgreen.svg)](https://github.com/timihack/authwarden)
+[![Tests](https://img.shields.io/badge/tests-441%20passing-brightgreen.svg)](https://github.com/timihack/authwarden)
 
 JWT auth, OAuth2 across 8 providers, MFA, RBAC, and full flow flexibility — all behind a clean FastAPI router you can drop into any app.
 
@@ -21,7 +21,7 @@ JWT auth, OAuth2 across 8 providers, MFA, RBAC, and full flow flexibility — al
 
 Most FastAPI auth tutorials show you a toy JWT example and stop there. authwarden is built for the parts that actually matter in production:
 
-- **Everything is a `Protocol`.** Bring your own database (the `AbstractUserStore` protocol works out of the box with SQLAlchemy, MongoDB/Beanie, SQLModel, or Tortoise — no built-in ORM lock-in), your own email/SMS provider, your own templates.
+- **Everything is a `Protocol`.** A SQLAlchemy store ships in the box (`authwarden[sqlalchemy]`). For anything else, the `AbstractUserStore` protocol works with MongoDB/Beanie, SQLModel, or Tortoise through a thin adapter you write. Same for your email/SMS provider and templates.
 - **Flexibility where it counts.** Verify by link or OTP. Notify by email, SMS, or both. Let users log in with email, username, or phone — your call, configured once.
 - **Security defaults that are actually defaults.** Brute-force lockout, OTP attempt limiting, encrypted OAuth tokens at rest, PKCE on every social login flow — none of it bolted on, none of it optional homework.
 - **A real test suite.** 390 tests across unit, flow, and full HTTP end-to-end coverage.
@@ -42,7 +42,7 @@ authwarden is a complete auth layer: routes, flows, and a storage protocol. [Aut
 | Login lockout and OTP attempt limits | ✅ | Not in its feature list |
 | Cookie transport | Not yet | ✅ |
 | Database and Redis token strategies | Not yet | ✅ |
-| Built-in ORM stores | Not yet (planned) | ✅ |
+| Built-in ORM stores | SQLAlchemy (more planned) | ✅ |
 
 Compared against the fastapi-users README as of October 2026. Check its current docs before deciding.
 
@@ -92,6 +92,7 @@ Optional extras:
 ```bash
 pip install "authwarden[redis]"   # Redis-backed sessions and token blacklist
 pip install "authwarden[sns]"     # AWS SNS SMS backend
+pip install "authwarden[sqlalchemy]"  # built-in SQLAlchemy user store
 pip install "authwarden[all]"     # everything
 ```
 
@@ -140,22 +141,19 @@ Open `http://127.0.0.1:8000/docs` — you now have working `/auth/register`, `/a
 Every behavioral switch lives here — verification method (link/OTP), notification channels, login identifier order, lockout thresholds, OAuth provider credentials, and more. See the [full configuration reference](https://timihack.github.io/authwarden) for every field.
 
 ### `AbstractUserStore`
-A `Protocol`, not a base class — any object with the right async methods satisfies it. Works with any database:
+A `Protocol`, not a base class — any object with the right async methods satisfies it. A SQLAlchemy store is built in:
 
 ```python
-class SQLAlchemyUserStore:
-    def __init__(self, session_factory):
-        self.session_factory = session_factory
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from authwarden.storage.sqlalchemy import SQLAlchemyUserStore, create_tables
 
-    async def get_by_email(self, email: str):
-        async with self.session_factory() as session:
-            result = await session.execute(select(UserModel).where(UserModel.email == email))
-            row = result.scalar_one_or_none()
-            return UserInDB.model_validate(row) if row else None
-    # ... remaining protocol methods
+engine = create_async_engine("postgresql+asyncpg://user:password@localhost/app")
+store = SQLAlchemyUserStore(async_sessionmaker(engine, expire_on_commit=False))
+warden = AuthWarden(config=config, user_store=store)
+# once at startup: await create_tables(engine)
 ```
 
-More examples (MongoDB/Beanie, SQLModel, Tortoise) in the [full docs](https://timihack.github.io/authwarden).
+For MongoDB/Beanie, SQLModel, Tortoise or anything else, implement the protocol yourself. Examples are in the [full docs](https://timihack.github.io/authwarden).
 
 ### Extending the user model
 `UserInDB` supports arbitrary extra data without a migration, or full subclassing for typed fields:

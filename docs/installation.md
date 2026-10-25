@@ -14,11 +14,13 @@ Some backends have additional dependencies that aren't installed by default, to 
 |---|---|---|
 | `redis` | `redis` | `RedisSessionBackend`, `RedisTokenBlacklist` |
 | `sns` | `boto3` | `AWSSNSSmsBackend` |
+| `sqlalchemy` | `sqlalchemy[asyncio]` | `SQLAlchemyUserStore` (you also install a database driver such as `asyncpg` or `aiosqlite`) |
 | `all` | both of the above | everything |
 
 ```bash
 pip install "authwarden[redis]"
 pip install "authwarden[sns]"
+pip install "authwarden[sqlalchemy]"
 pip install "authwarden[all]"
 ```
 
@@ -59,4 +61,4 @@ pip install -e ".[dev]"
 pytest
 ```
 
-`[dev]` adds `pytest`, `pytest-asyncio`, and `respx` (for mocking OAuth provider HTTP calls in tests), plus `boto3` and `redis` so the full test suite can run without extra setup.
+`[dev]` adds `pytest`, `pytest-asyncio`, and `respx` (for mocking OAuth provider HTTP calls in tests), plus `boto3`, `redis`, `sqlalchemy`, `aiosqlite` and `asyncpg` so the full test suite can run without extra setup.

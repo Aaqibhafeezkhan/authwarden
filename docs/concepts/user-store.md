@@ -24,73 +24,54 @@ class AbstractUserStore(Protocol):
 
 `UserInDB` has `model_config = ConfigDict(from_attributes=True)`, so it can validate directly from an ORM row as long as field names line up — `UserInDB.model_validate(row)`.
 
-## SQLAlchemy (async)
+## SQLAlchemy (built in)
 
-```python
-from sqlalchemy import select
-from authwarden import UserInDB
-from authwarden.models.user import OAuthAccount
-
-class SQLAlchemyUserStore:
-    def __init__(self, session_factory):
-        self.session_factory = session_factory
-
-    async def get_by_id(self, user_id: str) -> UserInDB | None:
-        async with self.session_factory() as session:
-            row = await session.get(UserModel, user_id)
-            return UserInDB.model_validate(row) if row else None
-
-    async def get_by_email(self, email: str) -> UserInDB | None:
-        async with self.session_factory() as session:
-            result = await session.execute(
-                select(UserModel).where(UserModel.email == email)
-            )
-            row = result.scalar_one_or_none()
-            return UserInDB.model_validate(row) if row else None
-
-    async def get_by_username(self, username: str) -> UserInDB | None:
-        async with self.session_factory() as session:
-            result = await session.execute(
-                select(UserModel).where(UserModel.username == username)
-            )
-            row = result.scalar_one_or_none()
-            return UserInDB.model_validate(row) if row else None
-
-    async def get_by_phone(self, phone: str) -> UserInDB | None:
-        async with self.session_factory() as session:
-            result = await session.execute(
-                select(UserModel).where(UserModel.phone_number == phone)
-            )
-            row = result.scalar_one_or_none()
-            return UserInDB.model_validate(row) if row else None
-
-    async def create(self, user: UserInDB) -> UserInDB:
-        async with self.session_factory() as session:
-            row = UserModel(**user.model_dump())
-            session.add(row)
-            await session.commit()
-            return user
-
-    async def update(self, user: UserInDB) -> UserInDB:
-        async with self.session_factory() as session:
-            row = await session.get(UserModel, user.id)
-            for key, value in user.model_dump().items():
-                setattr(row, key, value)
-            await session.commit()
-            return user
-
-    async def delete(self, user_id: str) -> None:
-        async with self.session_factory() as session:
-            row = await session.get(UserModel, user_id)
-            if row:
-                await session.delete(row)
-                await session.commit()
-
-    # OAuth account methods follow the same pattern against an OAuthAccountModel table
-    ...
+```bash
+pip install "authwarden[sqlalchemy]" asyncpg   # or aiosqlite for SQLite
 ```
 
-Your `UserModel` columns need to match `UserInDB`'s fields (or close enough for `model_validate` to map them) — `id`, `email`, `username`, `phone_number`, `hashed_password`, `is_active`, `is_verified`, `roles`, `scopes`, `mfa_secret`, `backup_codes`, and so on.
+Requires SQLAlchemy 2.0 or later in async mode. You install the database driver yourself.
+
+```python
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+from authwarden import AuthWarden, WardenConfig
+from authwarden.storage.sqlalchemy import SQLAlchemyUserStore, create_tables
+
+engine = create_async_engine("postgresql+asyncpg://user:password@localhost/app")
+session_factory = async_sessionmaker(engine, expire_on_commit=False)
+
+warden = AuthWarden(
+    config=WardenConfig(secret_key="change-me-to-a-real-32-byte-secret"),
+    user_store=SQLAlchemyUserStore(session_factory),
+)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await create_tables(engine)
+    yield
+    await engine.dispose()
+
+
+app = FastAPI(lifespan=lifespan)
+app.include_router(warden.router, prefix="/auth", tags=["auth"])
+```
+
+What to know:
+
+- **Tables.** `authwarden_users` and `authwarden_oauth_accounts`. The prefix keeps them away from your own `users` table. `create_tables(engine)` creates them if missing.
+- **Migrations.** Import `Base` from `authwarden.storage.sqlalchemy` and include `Base.metadata` in your Alembic `target_metadata`. On PostgreSQL, autogenerate also creates the case-insensitive unique indexes on email and username. On SQLite, Alembic can't reflect those two indexes and skips them with a warning, so use `create_tables` or add them by hand.
+- **Email and username** are matched case-insensitively, and uniqueness is enforced the same way by the database.
+- **Datetimes** are stored in UTC and come back timezone-aware on every database, including SQLite.
+- **Your own fields.** Put them in `extra_data`, which is stored as JSON. Fields you add by subclassing `UserInDB` are not persisted by this store. If you need real columns for them, write your own store.
+- **Duplicates.** The register flow checks email, username and phone first, so the database constraint only triggers on a race. It then raises SQLAlchemy's `IntegrityError`.
+- **Tested on** SQLite and PostgreSQL, with SQLAlchemy 2.0 and 2.1. Other databases may work but are not tested.
+
+Everything below this point is for databases that don't have a built-in store.
 
 ## MongoDB with Beanie
 
