@@ -7,6 +7,13 @@ and this project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.1.3] - 2026-10-24
+### Security
+- A wrong TOTP code at login now counts toward the login lockout, like a wrong password. Before, a caller who knew the password could guess the 6-digit code without limit. Upgrade is recommended for anyone using MFA.
+
+### Fixed
+- Login now accepts the adjacent 30-second TOTP window, as documented. Before, only the current code worked at login, while MFA setup and disable already accepted the adjacent window.
+
 ## [1.1.2] - 2026-10-23
 ### Security
 - Completes the 1.1.1 account-linking fix. Auto-link by email now also requires the local account's email to be verified and `require_email_verification` to be on, because with verification off a local account's email was never proven.
@@ -121,7 +128,8 @@ milestones rather than published package versions. Tagged on GitHub as
 - Exception hierarchy, Pydantic v2 models, `WardenConfig`,
   `AbstractUserStore` protocol, in-memory reference implementation.
 
-[Unreleased]: https://github.com/timihack/authwarden/compare/v1.1.2...HEAD
+[Unreleased]: https://github.com/timihack/authwarden/compare/v1.1.3...HEAD
+[1.1.3]: https://github.com/timihack/authwarden/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/timihack/authwarden/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/timihack/authwarden/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/timihack/authwarden/compare/v1.0.1...v1.1.0

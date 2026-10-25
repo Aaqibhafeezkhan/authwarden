@@ -38,7 +38,7 @@ With the above, `"identifier": "johndoe"` is tried as a username first; if no us
 
 ## Brute force protection
 
-Every failed attempt increments `failed_login_attempts` on the account. After `max_failed_attempts` consecutive failures, the account locks for `login_lockout_duration` seconds (`AccountLocked`, status `403`). The counter resets to zero on the next successful login. Set `max_failed_attempts=0` to disable lockout entirely.
+Every failed attempt increments `failed_login_attempts` on the account. A wrong TOTP code counts the same as a wrong password, so the 6-digit code can't be guessed without limit. Omitting the code (`MFARequired`) does not count. After `max_failed_attempts` consecutive failures, the account locks for `login_lockout_duration` seconds (`AccountLocked`, status `403`). The counter resets to zero on the next successful login. Set `max_failed_attempts=0` to disable lockout entirely.
 
 A login attempt against an unknown identifier still runs a dummy password verification before returning `InvalidCredentials` — this normalizes response timing so an attacker can't distinguish "wrong password" from "no such account" by response latency.
 
