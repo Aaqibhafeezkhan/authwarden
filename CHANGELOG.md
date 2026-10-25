@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
+### Documentation
+- Complete the SQLModel user-store adapter example with all 12 protocol methods, SQLite persistence, and HTTP API verification steps.
 
 ## [1.1.3] - 2026-10-24
 ### Security
