@@ -38,6 +38,21 @@ async def _resolve_user(
       return user
   return None
 
+async def _record_failed_attempt(
+  user: UserInDB,
+  store: AbstractUserStore,
+  config: WardenConfig
+) -> None:
+  """Count a failed password or MFA attempt and lock the account at the limit."""
+  if config.max_failed_attempts <= 0:
+    return
+  user.failed_login_attempts += 1
+  if user.failed_login_attempts >= config.max_failed_attempts:
+    user.locked_until = utcnow() + timedelta(seconds=config.login_lockout_duration)
+  user.updated_at = utcnow()
+  await store.update(user)
+
+
 async def login_flow(
     identifier: str,
     password: str,
@@ -92,12 +107,7 @@ async def login_flow(
     
     ok, new_hash = password_handler.verify_and_update(password, user.hashed_password)
     if not ok:
-      if config.max_failed_attempts > 0:
-        user.failed_login_attempts += 1
-        if user.failed_login_attempts >= config.max_failed_attempts:
-          user.locked_until = utcnow() + timedelta(seconds=config.login_lockout_duration)
-        user.updated_at = utcnow()
-        await store.update(user)
+      await _record_failed_attempt(user, store, config)
       raise InvalidCredentials()
     
     if not user.is_active:
@@ -109,7 +119,8 @@ async def login_flow(
     if config.enable_mfa and user.mfa_enabled:
       if not totp_code:
         raise MFARequired()
-      if not pyotp.TOTP(user.mfa_secret).verify(totp_code):
+      if not pyotp.TOTP(user.mfa_secret).verify(totp_code, valid_window=1):
+        await _record_failed_attempt(user, store, config)
         raise InvalidMFACode()
 
     # Success- reset brute-force counters + silent rehash
