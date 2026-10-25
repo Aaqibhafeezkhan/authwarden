@@ -124,27 +124,180 @@ class BeanieUserStore:
     # ...
 ```
 
-## SQLModel
+## SQLModel with SQLite
 
-SQLModel classes are already Pydantic models, so the adapter is the thinnest of all three:
+This example uses SQLModel with a real SQLite database. The store implements all 12 methods in `AbstractUserStore`; the methods are async to satisfy the protocol, while SQLModel's synchronous SQLite sessions perform the database I/O. For applications with heavier database concurrency, use SQLAlchemy's async engine/session pattern instead.
+
+Install the extra dependencies:
+
+```bash
+pip install "sqlmodel>=0.0.22"
+```
+
+The example stores list/dictionary fields as JSON and keeps OAuth accounts in a separate table. Save the following as `sqlmodel_store.py`:
 
 ```python
-from sqlmodel import SQLModel, Field, select
-from authwarden import UserInDB
+from sqlmodel import Field, Session, SQLModel, create_engine, select
+from sqlalchemy import Column, JSON, func
+
+from authwarden import OAuthAccount, UserInDB
+
 
 class UserTable(UserInDB, SQLModel, table=True):
     __tablename__ = "users"
+    roles: list[str] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
+    scopes: list[str] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
+    extra_data: dict = Field(default_factory=dict, sa_column=Column(JSON, nullable=False))
+    backup_codes: list[str] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
+
+
+class OAuthAccountTable(OAuthAccount, SQLModel, table=True):
+    __tablename__ = "oauth_accounts"
+    __table_args__ = ({"sqlite_autoincrement": True},)
+
 
 class SQLModelUserStore:
-    def __init__(self, session_factory):
-        self.session_factory = session_factory
+    def __init__(self, engine):
+        self.engine = engine
+
+    @staticmethod
+    def _user(row):
+        return UserInDB.model_validate(row) if row is not None else None
+
+    @staticmethod
+    def _account(row):
+        return OAuthAccount.model_validate(row) if row is not None else None
+
+    async def get_by_id(self, user_id: str) -> UserInDB | None:
+        with Session(self.engine) as session:
+            return self._user(session.get(UserTable, user_id))
 
     async def get_by_email(self, email: str) -> UserInDB | None:
-        async with self.session_factory() as session:
-            result = await session.execute(select(UserTable).where(UserTable.email == email))
-            return result.scalar_one_or_none()
-    # ...
+        with Session(self.engine) as session:
+            statement = select(UserTable).where(func.lower(UserTable.email) == email.lower())
+            return self._user(session.exec(statement).one_or_none())
+
+    async def get_by_username(self, username: str) -> UserInDB | None:
+        with Session(self.engine) as session:
+            statement = select(UserTable).where(func.lower(UserTable.username) == username.lower())
+            return self._user(session.exec(statement).first())
+
+    async def get_by_phone(self, phone: str) -> UserInDB | None:
+        with Session(self.engine) as session:
+            statement = select(UserTable).where(UserTable.phone_number == phone)
+            return self._user(session.exec(statement).first())
+
+    async def create(self, user: UserInDB) -> UserInDB:
+        row = UserTable.model_validate(user)
+        with Session(self.engine) as session:
+            session.add(row)
+            session.commit()
+            session.refresh(row)
+            return self._user(row)
+
+    async def update(self, user: UserInDB) -> UserInDB:
+        with Session(self.engine) as session:
+            row = session.get(UserTable, user.id)
+            if row is None:
+                raise ValueError(f"User {user.id!r} does not exist")
+            for key, value in user.model_dump().items():
+                setattr(row, key, value)
+            session.add(row)
+            session.commit()
+            session.refresh(row)
+            return self._user(row)
+
+    async def delete(self, user_id: str) -> None:
+        with Session(self.engine) as session:
+            row = session.get(UserTable, user_id)
+            if row is not None:
+                session.delete(row)
+                session.commit()
+            statement = select(OAuthAccountTable).where(OAuthAccountTable.user_id == user_id)
+            for account in session.exec(statement).all():
+                session.delete(account)
+            session.commit()
+
+    async def get_oauth_account(
+        self, provider: str, provider_user_id: str
+    ) -> OAuthAccount | None:
+        with Session(self.engine) as session:
+            statement = select(OAuthAccountTable).where(
+                OAuthAccountTable.provider == provider,
+                OAuthAccountTable.provider_user_id == provider_user_id,
+            )
+            return self._account(session.exec(statement).first())
+
+    async def get_oauth_accounts_for_user(self, user_id: str) -> list[OAuthAccount]:
+        with Session(self.engine) as session:
+            statement = select(OAuthAccountTable).where(OAuthAccountTable.user_id == user_id)
+            return [OAuthAccount.model_validate(row) for row in session.exec(statement).all()]
+
+    async def create_oauth_account(self, account: OAuthAccount) -> OAuthAccount:
+        row = OAuthAccountTable.model_validate(account)
+        with Session(self.engine) as session:
+            session.add(row)
+            session.commit()
+            session.refresh(row)
+            return self._account(row)
+
+    async def update_oauth_account(self, account: OAuthAccount) -> OAuthAccount:
+        with Session(self.engine) as session:
+            row = session.get(OAuthAccountTable, account.id)
+            if row is None:
+                raise ValueError(f"OAuth account {account.id!r} does not exist")
+            for key, value in account.model_dump().items():
+                setattr(row, key, value)
+            session.add(row)
+            session.commit()
+            session.refresh(row)
+            return self._account(row)
+
+    async def delete_oauth_account(self, user_id: str, provider: str) -> None:
+        with Session(self.engine) as session:
+            statement = select(OAuthAccountTable).where(
+                OAuthAccountTable.user_id == user_id,
+                OAuthAccountTable.provider == provider,
+            )
+            for row in session.exec(statement).all():
+                session.delete(row)
+            session.commit()
+
+
+engine = create_engine("sqlite:///./authwarden.db")
+SQLModel.metadata.create_all(engine)
+store = SQLModelUserStore(engine)
 ```
+
+The JSON-backed fields are important: SQLite does not have native array columns, and the inherited Pydantic model contains list/dictionary values. The adapter converts rows back to `UserInDB`/`OAuthAccount` so callers receive the protocol's canonical models rather than ORM table objects. The user and OAuth tables should be migrated with your application's normal schema migration process instead of relying on `create_all` in production.
+
+### Exercise the HTTP API
+
+Use the same wiring as the [quickstart](../quickstart.md), replacing `MemoryUserStore` with the SQLModel store:
+
+```python
+from fastapi import Depends, FastAPI
+from authwarden import AuthWarden, WardenConfig
+from sqlmodel_store import store
+
+warden = AuthWarden(
+    config=WardenConfig(
+        secret_key="replace-this-with-a-long-random-secret",
+        require_email_verification=False,
+    ),
+    user_store=store,
+)
+app = FastAPI()
+app.include_router(warden.router, prefix="/auth", tags=["auth"])
+
+@app.get("/profile")
+async def profile(user=Depends(warden.current_user)):
+    return {"id": user.id, "email": user.email}
+```
+
+Start the app with `uvicorn main:app --reload`, then use `/docs` or the HTTP requests from the quickstart to register a user, log in, and call `/profile` with the returned bearer access token. Confirm the same user is still present after restarting the process; SQLite persists the record in `authwarden.db`.
+
+**Limitations:** this deliberately small example uses synchronous SQLite sessions inside async protocol methods, so database calls block the event loop. It is suitable for demonstrating and testing the adapter, not a high-concurrency production deployment. Use an async database engine/session strategy for production workloads. Add migrations and uniqueness constraints appropriate to your application's registration policy before deploying.
 
 ## Tortoise ORM
 
