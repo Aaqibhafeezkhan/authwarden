@@ -137,6 +137,8 @@ pip install "sqlmodel>=0.0.22"
 The example stores list/dictionary fields as JSON and keeps OAuth accounts in a separate table. Save the following as `sqlmodel_store.py`:
 
 ```python
+from datetime import datetime
+
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 from sqlalchemy import Column, JSON, func
 
