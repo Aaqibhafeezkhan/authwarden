@@ -53,7 +53,7 @@ Using a backup code to disable MFA consumes it (single-use) — but disabling MF
 { "identifier": "user@example.com", "password": "...", "totp_code": "123456" }
 ```
 
-Omitting `totp_code` when MFA is enabled returns `MFARequired` (403) rather than silently failing — the client knows exactly what's missing.
+Omitting `totp_code` when MFA is enabled returns `MFARequired` (403) rather than silently failing — the client knows exactly what's missing. A wrong code returns `InvalidMFACode` and counts toward the login lockout, the same as a wrong password.
 
 ## TOTP timing tolerance
 
