@@ -143,18 +143,55 @@ from sqlalchemy import Column, JSON, func
 from authwarden import OAuthAccount, UserInDB
 
 
-class UserTable(UserInDB, SQLModel, table=True):
+class UserTable(SQLModel, table=True):
     __tablename__ = "users"
+
+    id: str = Field(primary_key=True)
+    email: str = Field(index=True)
+    username: str | None = Field(default=None, index=True)
+    full_name: str | None = None
+    hashed_password: str | None = None
+    phone_number: str | None = Field(default=None, index=True)
+    phone_verified: bool = False
+    is_active: bool = True
+    is_verified: bool = False
+    is_superuser: bool = False
     roles: list[str] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
     scopes: list[str] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
     extra_data: dict = Field(default_factory=dict, sa_column=Column(JSON, nullable=False))
+    mfa_enabled: bool = False
+    mfa_secret: str | None = None
+    mfa_pending_secret: str | None = None
     backup_codes: list[str] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
+    last_verification_sent_at: datetime | None = None
+    verification_otp_hash: str | None = None
+    verification_otp_expires_at: datetime | None = None
+    verification_otp_attempts: int = 0
+    last_reset_request_at: datetime | None = None
+    reset_token_hash: str | None = None
+    reset_token_used_at: datetime | None = None
+    reset_otp_hash: str | None = None
+    reset_otp_expires_at: datetime | None = None
+    reset_otp_attempts: int = 0
+    failed_login_attempts: int = 0
+    locked_until: datetime | None = None
+    created_at: datetime
+    updated_at: datetime
 
 
-class OAuthAccountTable(OAuthAccount, SQLModel, table=True):
+class OAuthAccountTable(SQLModel, table=True):
     __tablename__ = "oauth_accounts"
-    __table_args__ = ({"sqlite_autoincrement": True},)
 
+    id: str = Field(primary_key=True)
+    user_id: str = Field(index=True)
+    provider: str = Field(index=True)
+    provider_user_id: str = Field(index=True)
+    email: str | None = None
+    access_token: str | None = None
+    refresh_token: str | None = None
+    token_expires_at: datetime | None = None
+    created_at: datetime
+    updated_at: datetime
 
 class SQLModelUserStore:
     def __init__(self, engine):
@@ -188,7 +225,7 @@ class SQLModelUserStore:
             return self._user(session.exec(statement).first())
 
     async def create(self, user: UserInDB) -> UserInDB:
-        row = UserTable.model_validate(user)
+        row = UserTable.model_validate(user.model_dump())
         with Session(self.engine) as session:
             session.add(row)
             session.commit()
@@ -234,7 +271,7 @@ class SQLModelUserStore:
             return [OAuthAccount.model_validate(row) for row in session.exec(statement).all()]
 
     async def create_oauth_account(self, account: OAuthAccount) -> OAuthAccount:
-        row = OAuthAccountTable.model_validate(account)
+        row = OAuthAccountTable.model_validate(account.model_dump())
         with Session(self.engine) as session:
             session.add(row)
             session.commit()
