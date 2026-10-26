@@ -7,7 +7,12 @@ and this project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 ### Documentation
-- Complete the SQLModel user-store adapter example with all 12 protocol methods, SQLite persistence, and HTTP API verification steps.
+- Update the SQLModel user-store example for async SQLite sessions, SQLModel 0.0.45+, unique identifiers, and prefixed tables.
+
+## [1.2.0] - 2026-10-24
+### Added
+- Built-in SQLAlchemy user store: `authwarden.storage.sqlalchemy.SQLAlchemyUserStore`, with `create_tables()` and the `Base` metadata for Alembic. Install with `pip install "authwarden[sqlalchemy]"`. Async SQLAlchemy 2.0+, tested on SQLite and PostgreSQL. Email and username are case-insensitive and unique, and datetimes are timezone-aware on every database.
+- CI now runs the test suite against a PostgreSQL service as well as SQLite.
 
 ## [1.1.3] - 2026-10-24
 ### Security
@@ -130,7 +135,8 @@ milestones rather than published package versions. Tagged on GitHub as
 - Exception hierarchy, Pydantic v2 models, `WardenConfig`,
   `AbstractUserStore` protocol, in-memory reference implementation.
 
-[Unreleased]: https://github.com/timihack/authwarden/compare/v1.1.3...HEAD
+[Unreleased]: https://github.com/timihack/authwarden/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/timihack/authwarden/compare/v1.1.3...v1.2.0
 [1.1.3]: https://github.com/timihack/authwarden/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/timihack/authwarden/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/timihack/authwarden/compare/v1.1.0...v1.1.1
