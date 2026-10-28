@@ -107,12 +107,12 @@ class BeanieUserStore:
 
 ## SQLModel with SQLite
 
-This adapter implements all 12 methods in `AbstractUserStore` with an asynchronous SQLite engine and `AsyncSession`. It requires SQLModel 0.0.45 or newer; older versions can return naive datetimes from SQLite and break account-lockout checks.
+This adapter implements all 12 methods in `AbstractUserStore` with an asynchronous SQLite engine and `AsyncSession`. It was tested with SQLModel 0.0.45 to 0.0.48 and authwarden 1.2.0 on SQLite.
 
 Install:
 
 ```bash
-pip install "sqlmodel>=0.0.45" aiosqlite
+pip install "sqlmodel>=0.0.45" "sqlalchemy[asyncio]" aiosqlite
 ```
 
 Save as `sqlmodel_store.py`:
@@ -368,7 +368,7 @@ async def profile(user=Depends(warden.current_user)):
 
 Start the app with `uvicorn main:app --reload`. In `/docs`, register a user, check duplicate-email rejection, log in, exercise the lockout flow, and call `/profile` with the returned bearer token. Try an OAuth provider if configured. Restart the app and confirm the user persists in `authwarden.db`.
 
-**Compatibility note:** the maintainer reported testing the HTTP flow with authwarden 1.1.3 and 1.2.0 using SQLModel 0.0.45 and 0.0.48. This adapter requires SQLModel 0.0.45 or newer; older releases can return naive SQLite datetimes and fail during lockout checks.
+**Compatibility note:** the HTTP walkthrough was tested with authwarden 1.1.3 and 1.2.0 using SQLModel 0.0.45 and 0.0.48.
 
 ## Tortoise ORM
 
